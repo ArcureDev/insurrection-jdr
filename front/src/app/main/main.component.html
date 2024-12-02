@@ -1,0 +1,47 @@
+<section class="absolute top-0 bottom-0 w-56 left-0 bg-primary p-4 text-white">
+  <div class="h-full flex flex-col justify-between">
+    <div class="flex flex-col">
+      <h1 class="text-center text-xl">INSURRECTION</h1>
+      @if (currentGame()) {
+        <ins-button
+          [type]="'button'" [title]="'Rejoindre ma partie'" [fullWidth]="true" [routerLink]="authenticatedRoute(PATH_GAME)">
+          Rejoindre ma partie
+        </ins-button>
+      }
+    </div>
+    <div class="flex flex-col gap-2">
+      @if (!currentGame()) {
+        <ins-button [type]="'button'" [title]="'Créer une nouvelle partie'" [fullWidth]="true" (clicking)="createGameDialog.showModal()">
+          + Nouvelle partie
+        </ins-button>
+        <ins-button [type]="'button'" [title]="'Rejoindre une partie'" [fullWidth]="true" (clicking)="joinGameDialog.showModal()">
+          Rejoindre une partie
+        </ins-button>
+      }
+      <ins-button [type]="'button'" [title]="'Se déconnecter'" [fullWidth]="true" (clicking)="logout()">Se déconnecter</ins-button>
+    </div>
+  </div>
+</section>
+<section class="absolute top-0 bottom-0 left-56 right-0 p-4">
+  <router-outlet/>
+  <dialog #joinGameDialog class="p-4 rounded-md border-gray-600 w-96">
+    <form class="flex flex-col gap-3" [formGroup]="joinGameForm" (ngSubmit)="joinGame()">
+      <ins-input formControlName="id" [inputType]="'text'" [label]="'Identifiant de la partie'" [placeholder]="'911bb8c8-e270-4dfb-ba42-9051e64ab7b0'"/>
+      <ins-input formControlName="name" [inputType]="'text'" [label]="'Votre pseudo'" [placeholder]="'BgDu75'"/>
+      <div class="flex justify-between">
+        <ins-button [type]="'button'" [title]="'Annuler'" [outline]="true" (clicking)="joinGameDialog.close()">Annuler</ins-button>
+        <ins-button [type]="'submit'" [title]="'Rejoindre'">Rejoindre</ins-button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog #createGameDialog class="p-4 rounded-md border-gray-600 w-96">
+    <form class="flex flex-col gap-3" [formGroup]="createGameForm" (ngSubmit)="createGame()">
+      <ins-input formControlName="name" [inputType]="'text'" [label]="'Votre pseudo'" [placeholder]="'BgDu75'"/>
+      <div class="flex justify-between">
+        <ins-button [type]="'button'" [title]="'Annuler'" [outline]="true" (clicking)="createGameDialog.close()">Annuler</ins-button>
+        <ins-button [type]="'submit'" [title]="'Créer'">Créer</ins-button>
+      </div>
+    </form>
+  </dialog>
+</section>

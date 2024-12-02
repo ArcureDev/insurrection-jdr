@@ -1,0 +1,48 @@
+$padding-input: 12px;
+
+input {
+  box-shadow: none;
+
+  &:focus {
+    box-shadow: none;
+    outline: none;
+  }
+
+  &:focus-visible {
+    box-shadow: none;
+    outline: none;
+  }
+}
+
+.form-control {
+  border-radius: 0 !important;
+}
+
+.left-rounded {
+  border-top-left-radius: 50%;
+  border-bottom-left-radius: 50%;
+}
+
+.right-rounded {
+  border-top-right-radius: 50%;
+  border-bottom-right-radius: 50%;
+}
+
+.icon {
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  z-index: 6;
+}
+
+.with-left-icon {
+  padding-left: $padding-input * 3 !important;
+}
+
+.rounded-pill-important {
+  border-radius: var(--bs-border-radius-pill)!important;
+}
+
+.form-label {
+  margin-bottom: .2rem;
+}

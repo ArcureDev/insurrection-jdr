@@ -1,0 +1,25 @@
+@let currGame = game();
+@if (currGame) {
+  <div class="flex flex-col gap-4 py-4">
+    <ins-card [title]="'Identifiant de la partie (À NE PAS MONTRER EN STREAM)'">
+      <ins-button [title]="'Copier l\'identifiant'" (clicking)="copyUrl()">Copier l'identifiant</ins-button>
+    </ins-card>
+
+    <ins-card [title]="'Joueur·euse·s'">
+      <ul class="flex flex-col gap-3">
+        @for (player of currGame.players; track $index) {
+          <li>{{player.name}}</li>
+        }
+      </ul>
+    </ins-card>
+    <ins-button [title]="'Supprimer la partie'" [danger]="true" (clicking)="closeGameDialog.showModal()">Clôturer la partie</ins-button>
+  </div>
+}
+
+<dialog #closeGameDialog class="p-4 rounded-md border-gray-600 w-60">
+  <p>Souhaitez-vous réellement clôturer cette partie ? D:</p>
+  <div class="flex justify-between">
+    <ins-button [type]="'button'" [title]="'Annuler'" [outline]="true" (clicking)="closeGameDialog.close()">Annuler</ins-button>
+    <ins-button [type]="'button'" [title]="'Créer'" (clicking)="closeGame()">Clôturer</ins-button>
+  </div>
+</dialog>
