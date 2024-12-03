@@ -1,14 +1,18 @@
 package org.arcure.back.player
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import fr.arcure.uniting.configuration.security.CustomUser
 import jakarta.persistence.*
 import org.arcure.back.game.GameEntity
+import org.arcure.back.game.GameRepository
 import org.arcure.back.token.TokenEntity
 import org.arcure.back.user.UserEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -40,8 +44,12 @@ interface PlayerRepository : JpaRepository<PlayerEntity, Long> {
 
 @Service
 @Transactional(readOnly = true)
-class PlayerService(private val playerRepository: PlayerRepository) {
+class PlayerService(private val playerRepository: PlayerRepository, private val gameRepository: GameRepository) {
 
+    fun getMyPlayerFromOnGoingGame(): PlayerEntity? {
+        val game = gameRepository.findCurrent(CustomUser.get().userId) ?: return null
+        return playerRepository.findByGameIdAndUserId(game.id!!, CustomUser.get().userId)
+    }
 
 }
 

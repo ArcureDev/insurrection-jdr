@@ -3,6 +3,7 @@ package org.arcure.back.config
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import fr.arcure.uniting.configuration.security.CustomUser
 import org.arcure.back.game.GameEntity
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
@@ -19,13 +20,13 @@ class SSEComponent() {
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     }
 
-    fun addSse(playedId: Long?): SseEmitter? {
-        if (playedId == null) { return null; }
-        return sses.computeIfAbsent(playedId) { _: Long? -> SseEmitter(Long.MAX_VALUE) }
+    fun addSse(): SseEmitter? {
+        val userId = CustomUser.get().userId
+        return sses.computeIfAbsent(userId) { _: Long? -> SseEmitter(Long.MAX_VALUE) }
     }
 
-    fun removeCurrentUserSSE(playedId: Long) {
-        sses.remove(playedId)
+    fun removeSSE(userId: Long) {
+        sses.remove(userId)
     }
 
     // à chaque fois que la game est mise à jour

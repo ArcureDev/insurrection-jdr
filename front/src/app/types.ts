@@ -16,3 +16,8 @@ export type Game = {
   players: Player[];
   url: string;
 };
+
+export type User = {
+  id: number;
+  username: string;
+};

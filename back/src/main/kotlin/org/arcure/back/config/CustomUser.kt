@@ -14,7 +14,7 @@ class CustomUser(private val email: String, private val password: String, val us
 
             val principal = authentication.principal
             check (principal is CustomUser) { "no principal" }
-            return principal;
+            return principal
         }
     }
 

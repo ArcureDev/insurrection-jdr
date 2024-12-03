@@ -1,6 +1,6 @@
 import { effect, Injectable, resource, signal } from '@angular/core';
 import { toHttpParams } from './utils/object.utils';
-import { Game } from './types';
+import { Game, User } from './types';
 
 export const api = (value: string) => `/api/${value}`;
 export const apiWithParams = <T extends { [key in string]: any }>(
@@ -18,26 +18,43 @@ export class HttpService {
   private eventSource?: EventSource;
 
   currentGame = signal<Game | undefined>(undefined);
+  isAuthenticated = signal<boolean | undefined>(undefined);
 
   constructor() {
     this.currentGame = resource({
       loader: () => this.sweetFetch<Game, void>(api('games/me/current')),
     }).value;
 
+    this.isAuthenticated = resource({
+      loader: async () =>
+        !!(await this.sweetFetch<User, void>(api('users/authentication'))),
+    }).value;
+
     effect(() => {
-      const currentGame = this.currentGame();
-      if (!currentGame) return;
+      const isAuthenticated = this.isAuthenticated();
+      if (!isAuthenticated) {
+        this.unsubscribeToGameUpdates();
+        return;
+      }
       this.subscribeToGameUpdates();
     });
   }
 
   subscribeToGameUpdates() {
     if (this.eventSource) return;
-    // this.eventSource = new EventSource('/api/games/sse');
-    // this.eventSource.onmessage = (event: MessageEvent<string>) => {
-    //   const game = JSON.parse(event.data) as Game;
-    //   this.currentGame.set(game);
-    // };
+    this.eventSource = new EventSource('/api/games/sse');
+    this.eventSource.onmessage = (event: MessageEvent<string>) => {
+      const game = JSON.parse(event.data) as Game;
+      if (game.state === 'DONE') {
+        this.currentGame.set(undefined);
+        return;
+      }
+      this.currentGame.set(game);
+    };
+  }
+
+  unsubscribeToGameUpdates() {
+    this.eventSource = undefined;
   }
 
   async sweetFetch<T, R>(
@@ -62,7 +79,7 @@ export class HttpService {
     return fetch(api('logout'), {
       method: 'POST',
     }).then(() => {
-      this.eventSource = undefined;
+      this.isAuthenticated.set(false);
     });
   }
 }

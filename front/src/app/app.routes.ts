@@ -30,6 +30,7 @@ export const routes: Routes = [
   {
     path: PATH_USER,
     component: MainComponent,
+    canActivate: [authenticationGuard()],
     canActivateChild: [authenticationGuard()],
     children: [
       {

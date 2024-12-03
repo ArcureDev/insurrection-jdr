@@ -6,8 +6,28 @@ spring:
     url: jdbc:postgresql://${POSTGRESQL_ADDON_HOST}:${POSTGRESQL_ADDON_PORT}/${POSTGRESQL_ADDON_DB}?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: ${POSTGRESQL_ADDON_USER}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 5000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      maximum-pool-size: 10
+      minimum-idle: 1
+      leak-detection-threshold: 0
   flyway:
     locations: classpath:db/migration
     password: ${spring.datasource.password}
     url: ${spring.datasource.url}
     user: ${spring.datasource.username}
+  jpa:
+    open-in-view: true
+  task:
+    execution:
+      simple:
+        concurrency-limit: 2
+logging:
+  level:
+    root: WARN
+    fr.arcure.uniting: INFO
+    org:
+      hibernate:
+        SQL: ERROR

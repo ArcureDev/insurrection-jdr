@@ -1,6 +1,8 @@
-import { inject } from '@angular/core';
 import { CanActivateChildFn, Router, UrlTree } from '@angular/router';
 import { Observable } from 'rxjs';
+import { api } from '../http.service';
+import { inject } from '@angular/core';
+import { PATH_LOGIN, route } from '../app.routes';
 
 export const authenticationGuard = (): CanActivateChildFn => {
   return ():
@@ -9,23 +11,8 @@ export const authenticationGuard = (): CanActivateChildFn => {
     | boolean
     | UrlTree => {
     const router = inject(Router);
-
-    // const expiration = localStorage.getItem('expiration');
-    // if (!expiration || new Date() > new Date(JSON.parse(expiration))) {
-    //   return authService.getAuthenticatedUser().pipe(
-    //     map(authenticatedUser => {
-    //       if (!authenticatedUser) {
-    //         localStorage.clear();
-    //         authService.isAuthenticated.set(false);
-    //         return router.parseUrl('/home');
-    //       }
-    //       authService.setConnectedUserInfo(authenticatedUser);
-    //       authService.isAuthenticated.set(true);
-    //       return true;
-    //     })
-    //   );
-    // }
-    // authService.isAuthenticated.set(true);
-    return true;
+    return fetch(api('users/authentication')).then((response) => {
+      return response.ok ? true : router.parseUrl(route(PATH_LOGIN));
+    });
   };
 };

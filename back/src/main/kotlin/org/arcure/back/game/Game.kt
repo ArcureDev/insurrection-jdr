@@ -5,7 +5,6 @@ import jakarta.persistence.*
 import jakarta.validation.constraints.Max
 import org.arcure.back.config.SSEComponent
 import org.arcure.back.player.PlayerEntity
-import org.arcure.back.player.PlayerRepository
 import org.arcure.back.user.UserRepository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -63,7 +62,7 @@ interface GameRepository : JpaRepository<GameEntity, Long> {
 @Service
 @Transactional(readOnly = true)
 class GameService(private val gameRepository: GameRepository, private val userRepository: UserRepository,
-    val sseComponent: SSEComponent, val playerRepository: PlayerRepository
+                  val sseComponent: SSEComponent
 ) {
 
     @Transactional
@@ -107,15 +106,8 @@ class GameService(private val gameRepository: GameRepository, private val userRe
         gameEntity.state = GameState.DONE
         gameRepository.save(gameEntity)
 
-        gameEntity.players.mapNotNull { it.id }.forEach {
-            sseComponent.removeCurrentUserSSE(it)
-        }
-    }
-
-    fun subscribe(): SseEmitter? {
-        val gameId = getOnGoingGame()?.id ?: return null
-        val playerId = playerRepository.findByGameIdAndUserId(gameId, CustomUser.get().userId)?.id ?: return null
-        return sseComponent.addSse(playerId)
+        val usersIds = gameEntity.players.mapNotNull { it.user?.id };
+        sseComponent.sendGameThroughSSE(usersIds, gameEntity)
     }
 
     private fun checkHasNoOnGoingGame() {
@@ -135,13 +127,15 @@ class GameService(private val gameRepository: GameRepository, private val userRe
     }
 
     private fun notifySSE(gameEntity: GameEntity) {
-        sseComponent.sendGameThroughSSE(gameEntity.players.mapNotNull { it.id }, gameEntity)
+        sseComponent.sendGameThroughSSE(gameEntity.players.mapNotNull { it.user?.id }, gameEntity)
     }
 }
 
 @RestController
 @RequestMapping("/api/games")
-class GameController(val gameService: GameService) {
+class GameController(
+    private val gameService: GameService, private val sseComponent: SSEComponent
+) {
 
     @GetMapping("/me")
     fun getAllMine(): List<GameEntity> {
@@ -170,6 +164,6 @@ class GameController(val gameService: GameService) {
 
     @GetMapping(path = ["/sse"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
     fun subscribe(): SseEmitter? {
-        return gameService.subscribe()
+        return sseComponent.addSse()
     }
 }

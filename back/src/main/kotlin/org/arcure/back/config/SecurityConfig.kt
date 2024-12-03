@@ -129,12 +129,15 @@ class AuthenticationFailureHandler(@param:Qualifier("handlerExceptionResolver") 
 }
 
 @Component
-class LogoutSuccessHandler : SimpleUrlLogoutSuccessHandler() {
+class LogoutSuccessHandler(private val sseComponent: SSEComponent) : SimpleUrlLogoutSuccessHandler() {
     override fun onLogoutSuccess(
         request: HttpServletRequest,
         response: HttpServletResponse,
         authentication: Authentication?
     ) {
+        val principal = authentication?.principal
+        check (principal is CustomUser) { "no principal" }
+        sseComponent.removeSSE(principal.userId)
         response.status = HttpServletResponse.SC_OK
     }
 }

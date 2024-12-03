@@ -70,6 +70,7 @@ export class LoginComponent extends DefaultComponent {
         this.errorMessage.set('Compte inexistant ou mot de passe incorrect.');
         return;
       }
+      this.httpService.isAuthenticated.set(true);
       this.router.navigate([PATH_USER]);
     });
   }
