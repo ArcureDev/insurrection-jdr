@@ -1,0 +1,10 @@
+@let size = 22;
+@let myPlayer = player();
+@if (myPlayer) {
+  <div class="relative" [style.height.px]="size" [style.width.px]="size/2 * tokens().length" [title]="title()">
+    @for (token of tokens(); track $index) {
+      <ins-token [index]="$index" [size]="size" [color]="type() === 'SHARD' ? '#000' : myPlayer.color"/>
+    }
+  </div>
+}
+

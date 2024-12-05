@@ -8,13 +8,51 @@
     <ins-card [title]="'Joueur·euse·s'">
       <ul class="flex flex-col gap-3">
         @for (player of currGame.players; track $index) {
-          <li>{{player.name}}</li>
+          <li class="flex flex-col justify-between border-l-4 ps-2" [style.border-color]="player.color">
+            <div class="flex justify-between">
+              <div>{{player.name}}</div>
+              <ins-shard-tokens [player]="player"/>
+              <ins-influence-tokens [player]="player"/>
+            </div>
+            <div class="flex gap-2">
+              <ins-button [title]="'Copier le lien pour l\'overlay des jetons personnels'" [outline]="true" (clicking)="copyUrl()">
+                Jetons d'influence
+              </ins-button>
+              <ins-button [title]="'Copier le lien pour l\'overlay des jetons d\'éclat'" [outline]="true" (clicking)="copyUrl()">
+                Jetons d'éclat
+              </ins-button>
+            </div>
+          </li>
+          <hr/>
         }
       </ul>
     </ins-card>
-    <ins-button [title]="'Supprimer la partie'" [danger]="true" (clicking)="closeGameDialog.showModal()">Clôturer la partie</ins-button>
+    @if (currGame.players.length <= 2) {
+      <ins-card [title]="'Prérequis'">
+        <ul>
+          <li>Il faut au minimum 3 joueur·euse·s pour distribuer les jetons</li>
+        </ul>
+      </ins-card>
+    }
+    <div class="flex justify-between">
+      <ins-button [title]="'Supprimer la partie'" [danger]="true" (clicking)="closeGameDialog.showModal()">Clôturer la partie</ins-button>
+      @if (currGame.players.length > 2 && currGame.state === 'START') {
+        <ins-button [title]="'Distribuer les jetons'" (clicking)="dealTokensDialog.showModal()">Distribuer les jetons</ins-button>
+      }
+      @if (currGame.players.length > 2 && currGame.state === 'ON_GOING') {
+        <ins-button [title]="'Voir'" [routerLink]="authenticatedRoute('game-details')">Voir</ins-button>
+      }
+    </div>
   </div>
 }
+
+<dialog #dealTokensDialog class="p-4 rounded-md border-gray-600 w-60">
+  <p>Souhaitez-vous réellement distribuer les jetons ? La partie ne sera plus rejoignable par de nouvelles joueureuses</p>
+  <div class="flex justify-between">
+    <ins-button [type]="'button'" [title]="'Annuler'" [outline]="true" (clicking)="dealTokensDialog.close()">Annuler</ins-button>
+    <ins-button [type]="'button'" [title]="'Distribuer les jetons'" (clicking)="dealTokens()">Distribuer</ins-button>
+  </div>
+</dialog>
 
 <dialog #closeGameDialog class="p-4 rounded-md border-gray-600 w-60">
   <p>Souhaitez-vous réellement clôturer cette partie ? D:</p>

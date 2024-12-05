@@ -1,4 +1,4 @@
-import { effect, Injectable, resource, signal } from '@angular/core';
+import { effect, Injectable, Resource, resource, signal } from '@angular/core';
 import { toHttpParams } from './utils/object.utils';
 import { Game, User } from './types';
 
@@ -17,13 +17,14 @@ export const apiWithParams = <T extends { [key in string]: any }>(
 export class HttpService {
   private eventSource?: EventSource;
 
+  currentGameResource = resource({
+    loader: () => this.sweetFetch<Game, void>(api('games/me/current')),
+  });
   currentGame = signal<Game | undefined>(undefined);
   isAuthenticated = signal<boolean | undefined>(undefined);
 
   constructor() {
-    this.currentGame = resource({
-      loader: () => this.sweetFetch<Game, void>(api('games/me/current')),
-    }).value;
+    this.currentGame = this.currentGameResource.value;
 
     this.isAuthenticated = resource({
       loader: async () =>
@@ -36,6 +37,7 @@ export class HttpService {
         this.unsubscribeToGameUpdates();
         return;
       }
+      this.currentGameResource.reload();
       this.subscribeToGameUpdates();
     });
   }

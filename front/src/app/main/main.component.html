@@ -26,8 +26,9 @@
   <router-outlet/>
   <dialog #joinGameDialog class="p-4 rounded-md border-gray-600 w-96">
     <form class="flex flex-col gap-3" [formGroup]="joinGameForm" (ngSubmit)="joinGame()">
-      <ins-input formControlName="id" [inputType]="'text'" [label]="'Identifiant de la partie'" [placeholder]="'911bb8c8-e270-4dfb-ba42-9051e64ab7b0'"/>
+      <ins-input formControlName="id" [inputType]="'password'" [label]="'Identifiant de la partie'" [placeholder]="'911bb8c8-e270-4dfb-ba42-9051e64ab7b0'"/>
       <ins-input formControlName="name" [inputType]="'text'" [label]="'Votre pseudo'" [placeholder]="'BgDu75'"/>
+      <ins-input formControlName="color" [inputType]="'color'" [label]="'Votre couleur'" [placeholder]="'#e8e8e8'"/>
       <div class="flex justify-between">
         <ins-button [type]="'button'" [title]="'Annuler'" [outline]="true" (clicking)="joinGameDialog.close()">Annuler</ins-button>
         <ins-button [type]="'submit'" [title]="'Rejoindre'">Rejoindre</ins-button>
@@ -38,6 +39,7 @@
   <dialog #createGameDialog class="p-4 rounded-md border-gray-600 w-96">
     <form class="flex flex-col gap-3" [formGroup]="createGameForm" (ngSubmit)="createGame()">
       <ins-input formControlName="name" [inputType]="'text'" [label]="'Votre pseudo'" [placeholder]="'BgDu75'"/>
+      <ins-input formControlName="color" [inputType]="'color'" [label]="'Votre couleur'" [placeholder]="'#e8e8e8'"/>
       <div class="flex justify-between">
         <ins-button [type]="'button'" [title]="'Annuler'" [outline]="true" (clicking)="createGameDialog.close()">Annuler</ins-button>
         <ins-button [type]="'submit'" [title]="'Créer'">Créer</ins-button>

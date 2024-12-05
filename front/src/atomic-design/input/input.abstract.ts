@@ -11,6 +11,7 @@ import { FormControlComponent } from './form-control.abstract';
 
 export type InputType =
   | 'text'
+  | 'color'
   | 'email'
   | 'date'
   | 'datetime-local'

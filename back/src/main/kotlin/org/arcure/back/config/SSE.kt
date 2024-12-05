@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import fr.arcure.uniting.configuration.security.CustomUser
-import org.arcure.back.game.GameEntity
+import org.arcure.back.game.GameResponse
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.util.concurrent.ConcurrentHashMap
@@ -29,10 +29,14 @@ class SSEComponent() {
         sses.remove(userId)
     }
 
-    // à chaque fois que la game est mise à jour
-    fun sendGameThroughSSE(playersIds: List<Long>, game: GameEntity) {
+    fun notifySSE(playersIds: List<Long>, game: GameResponse?) {
+        sendGameThroughSSE(playersIds, game)
+    }
+
+    private fun sendGameThroughSSE(playersIds: List<Long>, game: GameResponse?) {
         playersIds.forEach {
             sses[it]?.send(objectMapper.writeValueAsString(game))
         }
     }
+
 }

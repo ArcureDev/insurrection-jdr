@@ -8,6 +8,7 @@ export const PATH_REGISTER = 'register';
 export const PATH_LOGIN = 'login';
 export const PATH_USER = 'user';
 export const PATH_GAME = 'game';
+export const PATH_GAME_DETAILS = 'game-details';
 
 export const routes: Routes = [
   {
@@ -37,6 +38,13 @@ export const routes: Routes = [
         path: PATH_GAME,
         loadComponent: () =>
           import('../app/game/game.component').then((c) => c.GameComponent),
+      },
+      {
+        path: PATH_GAME_DETAILS,
+        loadComponent: () =>
+          import('../app/game-details/game-details.component').then(
+            (c) => c.GameDetailsComponent,
+          ),
       },
     ],
   },

@@ -3,11 +3,20 @@ package org.arcure.back.config;
 import fr.arcure.uniting.configuration.security.CustomUser
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.aopalliance.intercept.MethodInvocation
+import org.arcure.back.game.GameRepository
+import org.arcure.back.player.PlayerRepository
 import org.arcure.back.user.UserRepository
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.expression.EvaluationContext
+import org.springframework.expression.spel.support.StandardEvaluationContext
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.expression.SecurityExpressionRoot
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler
+import org.springframework.security.access.expression.method.MethodSecurityExpressionOperations
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -28,12 +37,69 @@ import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.servlet.HandlerExceptionResolver
+import java.util.function.Supplier
 
 val PASSWORD_ENCODER: PasswordEncoder = BCryptPasswordEncoder()
 
+@Component
+class CustomMethodSecurityExpressionHandler(private val applicationContext: ApplicationContext) :
+    DefaultMethodSecurityExpressionHandler() {
+    override fun createEvaluationContext(
+        authentication: Supplier<Authentication>,
+        mi: MethodInvocation
+    ): EvaluationContext {
+        val context = super.createEvaluationContext(authentication, mi) as StandardEvaluationContext
+        val delegate = checkNotNull(context.rootObject.value as MethodSecurityExpressionOperations?)
+        val root = CustomMethodSecurityExpressionRoot(delegate, applicationContext.getBean(SecurityService::class.java))
+        context.setRootObject(root)
+        return context
+    }
+}
+
+class CustomMethodSecurityExpressionRoot(
+    methodSecurityExpressionOperations: MethodSecurityExpressionOperations,
+    private val securityService: SecurityService
+) : SecurityExpressionRoot(methodSecurityExpressionOperations.authentication), MethodSecurityExpressionOperations {
+    private var returnObject: Any? = null
+    private var filterObject: Any? = null
+    private var target: Any? = null
+
+    fun isMyGame(gameId: Long): Boolean {
+        return securityService.isMyGame(gameId)
+    }
+
+    override fun setFilterObject(filterObject: Any) {
+        this.filterObject = filterObject
+    }
+
+    override fun getFilterObject(): Any {
+        return filterObject!!
+    }
+
+    override fun setReturnObject(returnObject: Any) {
+        this.returnObject = returnObject
+    }
+
+    override fun getReturnObject(): Any {
+        return returnObject!!
+    }
+
+    fun setThis(target: Any?) {
+        this.target = target
+    }
+
+    override fun getThis(): Any {
+        return target!!
+    }
+}
+
 @Service
 @Transactional(readOnly = true)
-class SecurityService {
+class SecurityService(private val playerRepository: PlayerRepository) {
+
+    fun isMyGame(gameId: Long): Boolean {
+        return playerRepository.findByGameIdAndUserId(gameId, CustomUser.get().userId) != null
+    }
 
 }
 

@@ -1,18 +1,16 @@
 import {
   Component,
   computed,
-  effect,
   ElementRef,
   inject,
   Injector,
-  Resource,
   resource,
   viewChild,
 } from '@angular/core';
 import { ButtonComponent } from '../../atomic-design/button/button.component';
 import { DefaultComponent } from '../abstract-default.component';
 import { api, apiWithParams } from '../http.service';
-import { Game } from '../types';
+import { Game, PlayerPayload } from '../types';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import {
   authenticatedRoute,
@@ -45,9 +43,12 @@ export class MainComponent extends DefaultComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly injector = inject(Injector);
 
-  createNewGameResource?: Resource<Game | null>;
   createGameForm = this.formBuilder.nonNullable.group({
     name: this.formBuilder.nonNullable.control<string>('', [
+      Validators.required,
+      notBlankValidator,
+    ]),
+    color: this.formBuilder.nonNullable.control<string>('', [
       Validators.required,
       notBlankValidator,
     ]),
@@ -61,44 +62,36 @@ export class MainComponent extends DefaultComponent {
       Validators.required,
       notBlankValidator,
     ]),
+    color: this.formBuilder.nonNullable.control<string>('', [
+      Validators.required,
+      notBlankValidator,
+    ]),
   });
 
   currentGame = computed(() => this.httpService.currentGame());
 
-  protected readonly route = route;
   protected readonly PATH_GAME = PATH_GAME;
   protected readonly authenticatedRoute = authenticatedRoute;
-
-  constructor() {
-    super();
-
-    effect(() => {
-      if (!this.createNewGameResource?.value()) return;
-    });
-  }
 
   createGame() {
     if (this.createGameForm.invalid) {
       return;
     }
-    if (!this.createNewGameResource) {
-      this.createNewGameResource = resource({
-        loader: async () => {
-          return this.httpService
-            .sweetFetch<
-              Game,
-              string
-            >(api('games'), 'POST', this.createGameForm.controls.name.value)
-            .then((game) => {
-              this.toto(game, this.createGameDialog());
-              return game;
-            });
-        },
-        injector: this.injector,
-      });
-      return;
-    }
-    this.createNewGameResource.reload();
+    resource({
+      loader: async () => {
+        return this.httpService
+          .sweetFetch<
+            Game,
+            PlayerPayload
+          >(api('games'), 'POST', this.createGameForm.getRawValue())
+          .then((game) => {
+            console.log('gameee', game);
+            this.applyNewGame(game, this.createGameDialog());
+            return game;
+          });
+      },
+      injector: this.injector,
+    });
   }
 
   joinGame() {
@@ -110,10 +103,10 @@ export class MainComponent extends DefaultComponent {
         return this.httpService
           .sweetFetch<
             Game,
-            string
-          >(apiWithParams('games', { id: this.joinGameForm.value.id }), 'PUT', this.joinGameForm.controls.name.value)
+            PlayerPayload
+          >(apiWithParams('games', { url: this.joinGameForm.value.id }), 'PUT', this.joinGameForm.getRawValue())
           .then((game) => {
-            this.toto(game, this.joinGameDialog());
+            this.applyNewGame(game, this.joinGameDialog());
           });
       },
       injector: this.injector,
@@ -126,10 +119,15 @@ export class MainComponent extends DefaultComponent {
     });
   }
 
-  private toto(game: Game, dialogElementRef?: ElementRef<HTMLDialogElement>) {
+  private applyNewGame(
+    game: Game,
+    dialogElementRef?: ElementRef<HTMLDialogElement>,
+  ) {
     dialogElementRef?.nativeElement.close();
     this.httpService.subscribeToGameUpdates();
-    this.router.navigate([authenticatedRoute(PATH_GAME)]);
     this.httpService.currentGame.set(game);
+    this.createGameForm.reset();
+    this.joinGameForm.reset();
+    this.router.navigate([authenticatedRoute(PATH_GAME)]);
   }
 }
