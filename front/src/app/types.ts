@@ -21,11 +21,15 @@ export type PlayerPayload = {
 };
 
 export type Player = PlayerPayload & {
-  id: string;
+  id: number;
   role: PlayerRole;
   playableTokens: Token[];
   myTokens: Token[];
   me: boolean;
+};
+
+export type SimplePlayer = PlayerPayload & {
+  id: number;
 };
 
 export type Game = {
@@ -44,5 +48,6 @@ export type User = {
 export type Token = {
   id: number;
   type: TokenType;
-  owner: Player;
+  owner?: Player | null;
+  player: Player;
 };

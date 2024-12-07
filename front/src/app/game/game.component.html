@@ -11,8 +11,10 @@
           <li class="flex flex-col justify-between border-l-4 ps-2" [style.border-color]="player.color">
             <div class="flex justify-between">
               <div>{{player.name}}</div>
-              <ins-shard-tokens [player]="player"/>
-              <ins-influence-tokens [player]="player"/>
+              <div class="flex gap-4">
+                <ins-shard-tokens [player]="player"/>
+                <ins-influence-tokens [player]="player"/>
+              </div>
             </div>
             <div class="flex gap-2">
               <ins-button [title]="'Copier le lien pour l\'overlay des jetons personnels'" [outline]="true" (clicking)="copyUrl()">

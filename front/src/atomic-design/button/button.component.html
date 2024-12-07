@@ -1,10 +1,12 @@
 <button
-  class="rounded-md text-center px-3 py-2"
+  class="rounded-md text-center px-3 py-2 "
   [ngClass]="{
-    'border border-black text-black hover:bg-black hover:text-white hover:outline-black': outline() && !danger(),
+    'border border-black hover:bg-black hover:text-white hover:outline-black': outline() && !danger(),
     'bg-black hover:bg-gray-700': !outline() && !danger(),
     'bg-red-700 hover:bg-red-600': danger(),
-    'text-white': danger() || !outline(),
+    'text-white': (danger() || !outline()) && !isGhost(),
+    'text-black': outline() && !danger() || isGhost(),
+    'bg-transparent hover:bg-gray-100': isGhost(),
     'w-full': fullWidth()
   }"
   [type]="type()"

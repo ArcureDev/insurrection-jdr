@@ -14,6 +14,7 @@ export abstract class AbstractButtonComponent {
   disabled = input<boolean>(false);
   outline = input<boolean>(false);
   danger = input<boolean>(false);
+  isGhost = input<boolean>(false);
 
   clicking = output<MouseEvent>();
 }

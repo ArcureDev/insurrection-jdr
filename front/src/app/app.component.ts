@@ -1,5 +1,4 @@
 import { Component, inject, resource } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { HttpService } from './http.service';
 import { RouterOutlet } from '@angular/router';
 

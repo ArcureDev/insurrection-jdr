@@ -1,9 +1,11 @@
-@let size = 22;
+@let size = 25;
 @let myPlayer = player();
 @if (myPlayer) {
-  <div class="relative" [style.height.px]="size" [style.width.px]="size/2 * tokens().length" [title]="title()">
+  <div class="relative" [style.height.px]="size" [style.width.px]="size * tokens().length" [title]="title()">
     @for (token of tokens(); track $index) {
-      <ins-token [index]="$index" [size]="size" [color]="type() === 'SHARD' ? '#000' : myPlayer.color"/>
+      <div [class.absolute]="true" [style.left.px]="size * $index">
+        <ins-token [size]="size" [color]="type() === 'SHARD' ? '#000' : token.owner?.color" [type]="token.type"/>
+      </div>
     }
   </div>
 }

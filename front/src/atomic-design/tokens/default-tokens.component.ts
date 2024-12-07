@@ -21,16 +21,20 @@ export class DefaultTokensComponent {
       const type = this.type();
       if (!player || !type) return;
 
+      const shardTokens = player.playableTokens.filter(
+        (token) => token.type === 'SHARD',
+      );
+      const influenceTokens = player.playableTokens.filter(
+        (token) => token.type === 'INFLUENCE',
+      );
+
       const title =
         type === 'SHARD'
-          ? player.playableTokens.length + " jetons d'éclat"
-          : player.myTokens.length + " jetons d'influence";
+          ? shardTokens.length + " jetons d'éclat"
+          : influenceTokens.length + " jetons d'influence";
       this.title.set(title);
 
-      const tokens =
-        type === 'SHARD'
-          ? player.playableTokens.filter((token) => token.type === type)
-          : player.playableTokens.filter((token) => token.type !== 'SHARD');
+      const tokens = type === 'SHARD' ? shardTokens : influenceTokens;
       this.tokens.set(tokens);
     });
   }

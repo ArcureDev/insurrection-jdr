@@ -1,15 +1,54 @@
-<div class="absolute top-0 bottom-16 left-0 right-0 flex flex-col justify-between">
-  <div>
-    <div class="flex gap-1">
-      {{game()?.nbAvailableShardTokens}}
-      <ins-token [color]="'#000'" [size]="22" [index]="0" [absolute]="false"/>
+<div class="absolute top-0 bottom-16 left-0 right-0 flex flex-col justify-between overflow-auto">
+  <div class="flex flex-col gap-3 p-2">
+    <div class="flex gap-1 items-center self-center">
+      <div class="custom-shadow border border-gray-100 rounded-lg p-4 flex flex-col gap-2 w-60 items-center">
+        <div class="flex gap-2">
+          {{game()?.nbAvailableShardTokens}}
+          <ins-token [size]="22" [absolute]="false" [type]="'SHARD'"/>
+        </div>
+        <div class="flex gap-2">
+          @if (canGiveShardToken()) {
+            <ins-button class="flex gap-2" [type]="'button'" [title]="'Donner un jeton'" [isGhost]="true"
+                        (clicking)="giveShardToken()">
+              Donner
+            </ins-button>
+          }
+          <ins-button [type]="'button'" [title]="'Récupérer un jeton'" [isGhost]="true">
+            Subir
+          </ins-button>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-wrap self-center gap-3">
+      @for (player of game()?.players | withoutMyPlayer: myPlayer() ; track player.id) {
+        <div class="custom-shadow border border-gray-100 rounded-lg p-4 flex flex-col gap-2 w-60 items-center">
+          <span class="text-center" [style.color]="player.color">{{player.name}}</span>
+          <ins-shard-tokens [player]="player"/>
+          <ins-influence-tokens [player]="player"/>
+          @if (canGiveInfluenceToken(player.id)) {
+            <ins-button
+              [type]="'button'"
+              [title]="'Donner un jeton'"
+              [isGhost]="true"
+              (click)="giveToken(player)">
+              Donner un jeton
+            </ins-button>
+          }
+        </div>
+      }
     </div>
   </div>
   <div class="flex justify-center p-2">
+  </div>
+</div>
+<div class="absolute bottom-0 left-0 right-0 p-2 h-16 shadow-inner flex justify-between items-center">
+  <div class="flex gap-4">
+    <span class="text-lg" [style.color]="myPlayer()?.color">{{myPlayer()?.name}}</span>
+  </div>
+  <div class="flex gap-2">
     <ins-shard-tokens [player]="myPlayer()"/>
     <ins-influence-tokens [player]="myPlayer()"/>
   </div>
-</div>
-<div class="absolute bottom-0 left-0 right-0 p-2 h-16 shadow-inner">
-  bottom
+  <div class="flex gap-2">
+  </div>
 </div>

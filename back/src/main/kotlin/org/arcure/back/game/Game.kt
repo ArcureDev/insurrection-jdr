@@ -118,7 +118,7 @@ class GameService(
         return gameRepository.findAllByPlayers(CustomUser.get().userId)
     }
 
-    fun getCurrentGame(): GameResponse? {
+    fun getCurrentGame(): GameResponse {
         val gameEntity = gameRepository.findCurrent(CustomUser.get().userId);
         val myPlayer = gameEntity?.players?.find { it.user?.id == CustomUser.get().userId }
 
@@ -131,6 +131,20 @@ class GameService(
         return gameMapper.toResponse(gameEntity, myPlayer)
     }
 
+    fun getCurrentGameAndNotifyOthers(): GameResponse {
+        val gameEntity = gameRepository.findCurrent(CustomUser.get().userId);
+        val myPlayer = gameEntity?.players?.find { it.user?.id == CustomUser.get().userId }
+
+        check(gameEntity != null) {
+            "No current game"
+        }
+        check(myPlayer != null) {
+            "No current player"
+        }
+        sseComponent.notifySSE(gameEntity.players, gameEntity)
+        return gameMapper.toResponse(gameEntity, myPlayer)
+    }
+
     @Transactional
     fun join(url: String, playerPayload: PlayerPayload): GameResponse {
         val gameEntity = gameRepository.findByUrl(url)
@@ -140,13 +154,11 @@ class GameService(
 
         val myPlayer = getMyPlayer(gameEntity, playerPayload)
         gameEntity.players.add(myPlayer)
-
         gameRepository.save(gameEntity)
 
-        val gameResponse = gameMapper.toResponse(gameEntity, myPlayer);
-        sseComponent.notifySSE(gameResponse.players.map { it.userId }, gameResponse)
+        sseComponent.notifySSE(gameEntity.players, gameEntity)
 
-        return gameResponse
+        return gameMapper.toResponse(gameEntity, myPlayer)
     }
 
     @Transactional
@@ -155,7 +167,7 @@ class GameService(
         gameEntity.state = GameState.DONE
         gameRepository.save(gameEntity)
 
-        sseComponent.notifySSE(gameEntity.players.mapNotNull { it.user?.id }, null)
+        sseComponent.notifySSE(gameEntity.players, null)
     }
 
     fun getMyPlayer(gameEntity: GameEntity, playerPayload: PlayerPayload): PlayerEntity {

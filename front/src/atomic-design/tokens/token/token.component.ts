@@ -1,14 +1,19 @@
 import { Component, input } from '@angular/core';
+import { Player, Token, TokenType } from '../../../app/types';
+import { hexToRgb } from '../../../app/utils/utils';
+import { JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'ins-token',
-  imports: [],
+  imports: [JsonPipe],
   templateUrl: './token.component.html',
   styleUrl: './token.component.scss',
 })
 export class TokenComponent {
   absolute = input<boolean>(true);
   size = input.required<number>();
-  index = input.required<number>();
-  color = input.required<string>(); //hexa
+  type = input.required<TokenType>();
+  color = input<string>(); //hexa
+
+  protected readonly hexToRgb = hexToRgb;
 }

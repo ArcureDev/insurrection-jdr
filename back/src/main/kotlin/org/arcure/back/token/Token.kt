@@ -1,13 +1,13 @@
 package org.arcure.back.token
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import fr.arcure.uniting.configuration.security.CustomUser
 import jakarta.persistence.*
 import org.arcure.back.config.SSEComponent
 import org.arcure.back.config.annotation.IsMyGame
 import org.arcure.back.game.*
+import org.arcure.back.getMyPlayer
 import org.arcure.back.player.PlayerEntity
 import org.arcure.back.player.PlayerMapper
+import org.arcure.back.player.PlayerRepository
 import org.arcure.back.player.SimplePlayerResponse
 import org.springframework.context.annotation.Lazy
 import org.springframework.data.jpa.repository.JpaRepository
@@ -15,10 +15,7 @@ import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import kotlin.random.Random
 
 val NB_SHARD_TOKENS_MAX: Int = 28
@@ -40,6 +37,17 @@ class TokenEntity(
     fun isMine(): Boolean {
         return player?.id != owner?.id
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val that = other as TokenEntity
+        return this.id == that.id
+    }
+
+    override fun hashCode(): Int {
+        return javaClass.hashCode()
+    }
 }
 
 enum class TokenType {
@@ -48,6 +56,8 @@ enum class TokenType {
 
 @Repository
 interface TokenRepository : JpaRepository<TokenEntity, Long> {
+    fun findByIdAndPlayerId(tokenId: Long, playerId: Long): TokenEntity?
+    fun findAllByPlayerIdAndOwnerId(playerId: Long, ownerId: Long): List<TokenEntity>
 }
 
 class TokenResponse(
@@ -72,8 +82,10 @@ class TokenMapper(@Lazy private val playerMapper: PlayerMapper) {
 @Service
 @Transactional(readOnly = true)
 class TokenService(
-    private val gameRepository: GameRepository, private val sseComponent: SSEComponent,
-    private val gameMapper: GameMapper
+    private val gameRepository: GameRepository,
+    private val sseComponent: SSEComponent,
+    private val gameMapper: GameMapper,
+    private val tokenRepository: TokenRepository
 ) {
 
     @Transactional
@@ -90,17 +102,31 @@ class TokenService(
         game.state = GameState.ON_GOING
         gameRepository.save(game)
 
-        val myPlayer = game.players.find { it.user?.id == CustomUser.get().userId }
+        val myPlayer = getMyPlayer(game)
 
-        check(myPlayer != null) {
-            "My player doesn't exist"
+        sseComponent.notifySSE(game.players, game)
+
+        return gameMapper.toResponse(game, myPlayer)
+    }
+
+    @Transactional
+    fun giveShardToken(gameId: Long) {
+        val game = gameRepository.getReferenceById(gameId)
+        val myPlayer = getMyPlayer(game)
+        val myShardTokens = myPlayer.playableTokens.filter { it.type == TokenType.SHARD }.toMutableList()
+
+        check(myShardTokens.isNotEmpty()) {
+            "No shard token available"
         }
 
-        val gameResponse = gameMapper.toResponse(game, myPlayer)
+        check(game.nbAvailableShardTokens < NB_SHARD_TOKENS_MAX) {
+            "Shard tokens exceeds maximum of $NB_SHARD_TOKENS_MAX"
+        }
 
-        sseComponent.notifySSE(gameResponse.players.map { it.userId }, gameResponse)
+        myPlayer.playableTokens.remove(myShardTokens[0])
 
-        return gameResponse
+        game.nbAvailableShardTokens++
+        gameRepository.save(game)
     }
 
     private fun dealTokensToPlayer(player: PlayerEntity, nbTokens: Int) {
@@ -142,14 +168,20 @@ class TokenService(
     }
 }
 
+@IsMyGame
 @RestController
 @RequestMapping("/api/games/{gameId}/tokens")
-class TokenController(private val tokenService: TokenService) {
+class TokenController(private val tokenService: TokenService, private val gameService: GameService) {
 
-    @IsMyGame
     @GetMapping
     fun getTokens(@PathVariable("gameId") gameId: Long): GameResponse {
         return tokenService.dealTokens(gameId)
+    }
+
+    @PostMapping
+    fun giveShardToken(@PathVariable("gameId") gameId: Long): GameResponse {
+        tokenService.giveShardToken(gameId)
+        return gameService.getCurrentGameAndNotifyOthers()
     }
 
 }

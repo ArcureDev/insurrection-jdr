@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse
 import org.aopalliance.intercept.MethodInvocation
 import org.arcure.back.game.GameRepository
 import org.arcure.back.player.PlayerRepository
+import org.arcure.back.token.TokenRepository
 import org.arcure.back.user.UserRepository
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.ApplicationContext
@@ -68,6 +69,10 @@ class CustomMethodSecurityExpressionRoot(
         return securityService.isMyGame(gameId)
     }
 
+    fun isMyToken(gameId: Long, tokenId: Long): Boolean {
+        return securityService.isMyToken(gameId, tokenId)
+    }
+
     override fun setFilterObject(filterObject: Any) {
         this.filterObject = filterObject
     }
@@ -95,10 +100,24 @@ class CustomMethodSecurityExpressionRoot(
 
 @Service
 @Transactional(readOnly = true)
-class SecurityService(private val playerRepository: PlayerRepository) {
+class SecurityService(
+    private val playerRepository: PlayerRepository, private val tokenRepository: TokenRepository,
+    private val gameRepository: GameRepository
+) {
 
     fun isMyGame(gameId: Long): Boolean {
         return playerRepository.findByGameIdAndUserId(gameId, CustomUser.get().userId) != null
+    }
+
+    fun isMyToken(gameId: Long, tokenId: Long): Boolean {
+        val game = gameRepository.getReferenceById(gameId)
+        val myPlayer = game.players.find { it.user?.id ==  CustomUser.get().userId }
+
+        check(myPlayer != null) {
+            "You need to be a player of this game"
+        }
+
+        return tokenRepository.findByIdAndPlayerId(gameId, myPlayer.id!!) != null
     }
 
 }

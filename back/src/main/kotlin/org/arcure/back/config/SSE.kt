@@ -4,13 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import fr.arcure.uniting.configuration.security.CustomUser
+import org.arcure.back.game.GameEntity
+import org.arcure.back.game.GameMapper
 import org.arcure.back.game.GameResponse
+import org.arcure.back.player.PlayerEntity
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.util.concurrent.ConcurrentHashMap
 
 @Component
-class SSEComponent() {
+class SSEComponent(private val gameMapper: GameMapper) {
     private val sses: MutableMap<Long, SseEmitter> = ConcurrentHashMap()
 
     private val objectMapper = ObjectMapper()
@@ -29,13 +32,15 @@ class SSEComponent() {
         sses.remove(userId)
     }
 
-    fun notifySSE(playersIds: List<Long>, game: GameResponse?) {
-        sendGameThroughSSE(playersIds, game)
+    fun notifySSE(players: List<PlayerEntity>, game: GameEntity?) {
+        sendGameThroughSSE(players, game)
     }
 
-    private fun sendGameThroughSSE(playersIds: List<Long>, game: GameResponse?) {
-        playersIds.forEach {
-            sses[it]?.send(objectMapper.writeValueAsString(game))
+    private fun sendGameThroughSSE(players: List<PlayerEntity>, game: GameEntity?) {
+        players.forEach {
+            val userId = it.user?.id ?: return@forEach
+            val gameResponse = if(game == null) null else gameMapper.toResponse(game, it)
+            sses[userId]?.send(objectMapper.writeValueAsString(gameResponse))
         }
     }
 
