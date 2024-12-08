@@ -4,7 +4,7 @@
       <div class="custom-shadow border border-gray-100 rounded-lg p-4 flex flex-col gap-2 w-60 items-center">
         <div class="flex gap-2">
           {{game()?.nbAvailableShardTokens}}
-          <ins-token [size]="22" [absolute]="false" [type]="'SHARD'"/>
+          <ins-token [size]="22" [type]="'SHARD'"/>
         </div>
         <div class="flex gap-2">
           @if (canGiveShardToken()) {
@@ -13,9 +13,11 @@
               Donner
             </ins-button>
           }
-          <ins-button [type]="'button'" [title]="'Récupérer un jeton'" [isGhost]="true">
-            Subir
-          </ins-button>
+          @if ((game()?.nbAvailableShardTokens) ?? 0 > 0) {
+            <ins-button [type]="'button'" [title]="'Récupérer un jeton'" [isGhost]="true" (clicking)="addShardToken()">
+              Subir
+            </ins-button>
+          }
         </div>
       </div>
     </div>
@@ -30,7 +32,7 @@
               [type]="'button'"
               [title]="'Donner un jeton'"
               [isGhost]="true"
-              (click)="giveToken(player)">
+              (clicking)="giveToken(player)">
               Donner un jeton
             </ins-button>
           }

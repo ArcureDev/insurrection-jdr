@@ -32,6 +32,10 @@ export type SimplePlayer = PlayerPayload & {
   id: number;
 };
 
+export type Color = {
+  color: string;
+};
+
 export type Game = {
   id: string;
   state: GameState;

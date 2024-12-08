@@ -1,0 +1,1 @@
+FROM arcuredev/insurrection:0.1

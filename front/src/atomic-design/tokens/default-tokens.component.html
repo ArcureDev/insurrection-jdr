@@ -1,12 +1,15 @@
 @let size = 25;
 @let myPlayer = player();
 @if (myPlayer) {
-  <div class="relative" [style.height.px]="size" [style.width.px]="size * tokens().length" [title]="title()">
-    @for (token of tokens(); track $index) {
-      <div [class.absolute]="true" [style.left.px]="size * $index">
-        <ins-token [size]="size" [color]="type() === 'SHARD' ? '#000' : token.owner?.color" [type]="token.type"/>
-      </div>
+  <div class="flex flex-wrap" [title]="title()">
+    @for (token of tokens().slice(0, 5)  ; track $index) {
+      <ins-token [size]="size" [color]="type() === 'SHARD' ? '#000' : token.owner?.color" [type]="token.type"/>
     }
+    @if (tokens().length > 5) {
+      <span class="ps-1">+</span>
+      <span class="self-end">{{tokens().length - 5}}</span>
+    }
+
   </div>
 }
 

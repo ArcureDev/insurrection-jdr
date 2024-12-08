@@ -124,8 +124,22 @@ class TokenService(
         }
 
         myPlayer.playableTokens.remove(myShardTokens[0])
-
         game.nbAvailableShardTokens++
+        gameRepository.save(game)
+    }
+
+    @Transactional
+    fun addShardToken(gameId: Long) {
+        val game = gameRepository.getReferenceById(gameId)
+        val myPlayer = getMyPlayer(game)
+
+        check(game.nbAvailableShardTokens > 0) {
+            "No shard token available"
+        }
+
+        val newShardToken = TokenEntity(null, TokenType.SHARD, myPlayer, null)
+        myPlayer.playableTokens.add(newShardToken)
+        game.nbAvailableShardTokens--
         gameRepository.save(game)
     }
 
@@ -181,6 +195,12 @@ class TokenController(private val tokenService: TokenService, private val gameSe
     @PostMapping
     fun giveShardToken(@PathVariable("gameId") gameId: Long): GameResponse {
         tokenService.giveShardToken(gameId)
+        return gameService.getCurrentGameAndNotifyOthers()
+    }
+
+    @PostMapping("/add")
+    fun addShardToken(@PathVariable("gameId") gameId: Long): GameResponse {
+        tokenService.addShardToken(gameId)
         return gameService.getCurrentGameAndNotifyOthers()
     }
 

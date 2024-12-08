@@ -2,7 +2,6 @@ package org.arcure.back.player
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.*
-import org.arcure.back.config.SSEComponent
 import org.arcure.back.game.*
 import org.arcure.back.getMyPlayer
 import org.arcure.back.token.TokenEntity
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -126,6 +126,15 @@ class PlayerService(
         gameRepository.save(game)
     }
 
+    @Transactional
+    fun changeColor(gameId: Long, toto: Toto) {
+        val game = gameRepository.getReferenceById(gameId)
+        val myPlayer = getMyPlayer(game)
+
+        myPlayer.color = toto.color
+        gameRepository.save(game)
+    }
+
     /**
      * Take other player's token in priority, connected user's otherwise
      */
@@ -140,6 +149,8 @@ class PlayerService(
 
 }
 
+class Toto(var color: String)
+
 @RestController
 @RequestMapping("/api/games/{gameId}/players")
 class PlayerController(private val playerService: PlayerService, private val gameService: GameService) {
@@ -149,6 +160,14 @@ class PlayerController(private val playerService: PlayerService, private val gam
         @PathVariable("gameId") gameId: Long, @PathVariable("playerId") playerId: Long
     ): GameResponse {
         playerService.giveToken(gameId, playerId)
+        return gameService.getCurrentGameAndNotifyOthers()
+    }
+
+    @PostMapping("/color")
+    fun giveToken(
+        @PathVariable("gameId") gameId: Long, @RequestBody color: Toto
+    ): GameResponse {
+        playerService.changeColor(gameId, color)
         return gameService.getCurrentGameAndNotifyOthers()
     }
 

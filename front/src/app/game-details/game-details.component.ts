@@ -91,4 +91,16 @@ export class GameDetailsComponent extends DefaultComponent {
         ) ?? false
     );
   }
+
+  addShardToken() {
+    resource({
+      loader: async () => {
+        return this.httpService.sweetFetch<Game, void>(
+          api(`games/${this.game()?.id}/tokens/add`),
+          'POST',
+        );
+      },
+      injector: this.injector,
+    });
+  }
 }
