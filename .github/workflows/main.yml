@@ -31,7 +31,7 @@ jobs:
         npm run build
         echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
         docker build -f Dockerfile -t arcuredev/insurrection-front:latest -t arcuredev/insurrection-front:${{github.sha}} .
-        docker push arcuredev/insurrection-front:${{github.sha}}
+        docker push ${{env.REGISTRY}}/arcuredev/insurrection-front:${{github.sha}}
 
 
 
