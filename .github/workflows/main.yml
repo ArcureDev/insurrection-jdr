@@ -32,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-front
     steps:
+      - uses: actions/checkout@v4
       - name: Build front image
         run: docker build -f Dockerfile -t arcuredev/insurrection-front:latest -t arcuredev/insurrection-front:${{github.sha}} .
       - name: Log in to the Container registry
