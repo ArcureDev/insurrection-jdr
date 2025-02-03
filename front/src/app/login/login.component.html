@@ -1,7 +1,7 @@
 <ins-centered-container class="">
-  <h1 class="text-center text-xl">Connexion</h1>
+  <h1 class="text-center text-xl text-white">Connexion</h1>
   <form class="flex flex-col gap-3" [formGroup]="form" (ngSubmit)="login()">
-    <ins-input formControlName="username" [label]="'Email'" [placeholder]="'coucou@coucou.coucou'" [inputType]="'email'" />
+    <ins-input formControlName="username" [label]="'Pseudo'" [placeholder]="'Toto'" [inputType]="'text'" />
     <ins-input formControlName="password" [label]="'Mot de passe'" [placeholder]="'coucou'" [inputType]="'password'" />
     <div class="flex justify-between">
       <ins-button [type]="'button'" [title]="'S\'inscrire'" [outline]="true" [routerLink]="route(PATH_REGISTER)">S'inscrire</ins-button>

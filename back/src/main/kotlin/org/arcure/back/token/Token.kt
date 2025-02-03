@@ -85,7 +85,6 @@ class TokenService(
     private val gameRepository: GameRepository,
     private val sseComponent: SSEComponent,
     private val gameMapper: GameMapper,
-    private val tokenRepository: TokenRepository
 ) {
 
     @Transactional
@@ -104,7 +103,7 @@ class TokenService(
 
         val myPlayer = getMyPlayer(game)
 
-        sseComponent.notifySSE(game.players, game)
+        sseComponent.notifySSE(game)
 
         return gameMapper.toResponse(game, myPlayer)
     }

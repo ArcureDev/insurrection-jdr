@@ -1,13 +1,7 @@
 <button
-  class="rounded-md text-center px-3 py-2 "
+  class="text-center py-2 text-white border-b-2 border-white hover:border-gray-800"
   [ngClass]="{
-    'border border-black hover:bg-black hover:text-white hover:outline-black': outline() && !danger(),
-    'bg-black hover:bg-gray-700': !outline() && !danger() && !isGhost(),
     'bg-red-700 hover:bg-red-600': danger(),
-    'text-white': (danger() || !outline()) && !isGhost(),
-    'text-black': outline() && !danger() || isGhost(),
-    'bg-transparent hover:bg-gray-100': isGhost(),
-    'w-full': fullWidth()
   }"
   [type]="type()"
   [title]="title()"

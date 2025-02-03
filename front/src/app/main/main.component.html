@@ -1,16 +1,13 @@
 <section class="absolute top-0 bottom-0 w-56 left-0 bg-primary p-4 text-white">
   <div class="h-full flex flex-col justify-between">
-    <div class="flex flex-col">
+    <div class="flex flex-col items-center">
       <h1 class="text-center text-xl">INSURRECTION</h1>
       @if (currentGame()) {
         <ins-button
           [type]="'button'" [title]="'Rejoindre ma partie'" [fullWidth]="true" [routerLink]="authenticatedRoute(PATH_GAME)">
           Rejoindre ma partie
         </ins-button>
-      }
-    </div>
-    <div class="flex flex-col gap-2">
-      @if (!currentGame()) {
+      } @else {
         <ins-button [type]="'button'" [title]="'Créer une nouvelle partie'" [fullWidth]="true" (clicking)="createGameDialog.showModal()">
           + Nouvelle partie
         </ins-button>
@@ -18,11 +15,13 @@
           Rejoindre une partie
         </ins-button>
       }
+    </div>
+    <div class="flex flex-col gap-2 items-center">
       <ins-button [type]="'button'" [title]="'Se déconnecter'" [fullWidth]="true" (clicking)="logout()">Se déconnecter</ins-button>
     </div>
   </div>
 </section>
-<section class="absolute top-0 bottom-0 left-56 right-0 p-4">
+<section class="absolute top-0 bottom-0 left-56 right-0 p-4 bg-transparent">
   <router-outlet/>
   <dialog #joinGameDialog class="p-4 rounded-md border-gray-600 w-96">
     <form class="flex flex-col gap-3" [formGroup]="joinGameForm" (ngSubmit)="joinGame()">

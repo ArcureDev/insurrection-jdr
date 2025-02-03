@@ -42,6 +42,7 @@ export type Game = {
   players: Player[];
   nbAvailableShardTokens: number;
   url: string;
+  flags: Flag[];
 };
 
 export type User = {
@@ -55,3 +56,12 @@ export type Token = {
   owner?: Player | null;
   player: Player;
 };
+
+export type Flag = {
+  id: number;
+  color: FlagColor;
+  player: SimplePlayer;
+  date: Date;
+};
+
+export type FlagColor = 'RED' | 'BLACK';

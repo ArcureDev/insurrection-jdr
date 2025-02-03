@@ -2,6 +2,9 @@ package org.arcure.back.player
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.*
+import org.arcure.back.flag.FlagEntity
+import org.arcure.back.flag.FlagMapper
+import org.arcure.back.flag.FlagResponse
 import org.arcure.back.game.*
 import org.arcure.back.getMyPlayer
 import org.arcure.back.token.TokenEntity
@@ -9,6 +12,7 @@ import org.arcure.back.token.TokenMapper
 import org.arcure.back.token.TokenRepository
 import org.arcure.back.token.TokenResponse
 import org.arcure.back.user.UserEntity
+import org.springframework.context.annotation.Lazy
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
@@ -27,8 +31,6 @@ class PlayerEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
     var name: String? = null,
-    var nbRedFlag: Int = 0,
-    var nbBlackFlag: Int = 0,
     var color: String? = null,
     @Enumerated(EnumType.STRING)
     var role: PlayerRole? = null,
@@ -37,10 +39,12 @@ class PlayerEntity(
     var game: GameEntity? = null,
     @ManyToOne
     var user: UserEntity? = null,
-    @OneToMany(mappedBy = "player", cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "player", cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER, orphanRemoval = true)
     var playableTokens: MutableList<TokenEntity> = mutableListOf(),
-    @OneToMany(mappedBy = "owner", cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY)
-    var myTokens: MutableList<TokenEntity> = mutableListOf()
+    @OneToMany(mappedBy = "owner", cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
+    var myTokens: MutableList<TokenEntity> = mutableListOf(),
+    @OneToMany(mappedBy = "player", cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
+    var flags: MutableList<FlagEntity> = mutableListOf()
 )
 
 enum class PlayerRole {
@@ -57,13 +61,12 @@ class PlayerPayload(val name: String, val color: String)
 class PlayerResponse(
     val id: Long,
     val name: String,
-    val nbRedFlag: Int,
-    val nbBlackFlag: Int,
     val color: String,
     val role: PlayerRole?,
     val userId: Long,
     val playableTokens: List<TokenResponse> = mutableListOf(),
     val myTokens: List<TokenResponse> = mutableListOf(),
+    val flags: List<FlagResponse> = mutableListOf(),
     val isMe: Boolean
 )
 
@@ -74,7 +77,10 @@ class SimplePlayerResponse(
 )
 
 @Component
-class PlayerMapper(private val tokenMapper: TokenMapper) {
+class PlayerMapper(
+    private val tokenMapper: TokenMapper,
+    @Lazy private val flagMapper: FlagMapper
+) {
     fun toEntity(playerPayload: PlayerPayload): PlayerEntity {
         val player = PlayerEntity()
         player.name = playerPayload.name
@@ -95,13 +101,12 @@ class PlayerMapper(private val tokenMapper: TokenMapper) {
         return PlayerResponse(
             player.id!!,
             player.name!!,
-            player.nbRedFlag,
-            player.nbBlackFlag,
             player.color!!,
             player.role,
             player.user!!.id!!,
             player.playableTokens.map { tokenMapper.toResponse(it) },
             player.myTokens.map { tokenMapper.toResponse(it) },
+            player.flags.map { flagMapper.toResponse(it) },
             isMe
         )
     }

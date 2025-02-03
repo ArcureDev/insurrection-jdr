@@ -9,12 +9,13 @@ import {
 } from '@angular/core';
 import { DefaultComponent } from '../abstract-default.component';
 import { ShardTokensComponent } from '../../atomic-design/tokens/shards/shard-tokens.component';
-import { Game, Player, Token } from '../types';
+import { FlagColor, Game, Player, Token } from '../types';
 import { TokenComponent } from '../../atomic-design/tokens/token/token.component';
 import { InfluenceTokensComponent } from '../../atomic-design/tokens/influences/influence-tokens.component';
 import { ButtonComponent } from '../../atomic-design/button/button.component';
 import { api } from '../http.service';
 import { WithoutMyPlayerPipe } from './without-my-player.pipe';
+import { FlagComponent } from '../../atomic-design/flag/flag.component';
 
 @Component({
   selector: 'ins-game-details',
@@ -24,6 +25,7 @@ import { WithoutMyPlayerPipe } from './without-my-player.pipe';
     InfluenceTokensComponent,
     ButtonComponent,
     WithoutMyPlayerPipe,
+    FlagComponent,
   ],
   templateUrl: './game-details.component.html',
   styleUrl: './game-details.component.scss',
@@ -34,6 +36,8 @@ export class GameDetailsComponent extends DefaultComponent {
   game = signal<Game | undefined>(this.httpService.currentGame());
 
   myPlayer = signal<Player | undefined>(undefined);
+  nbRedFlags = signal<number>(0);
+  nbBlackFlags = signal<number>(0);
 
   constructor() {
     super();
@@ -41,6 +45,12 @@ export class GameDetailsComponent extends DefaultComponent {
       const game = this.game();
       if (!game) return;
       this.myPlayer.set(game.players.find((player) => player.me));
+      this.nbRedFlags.set(
+        game.flags.filter((flag) => flag.color === 'RED').length,
+      );
+      this.nbBlackFlags.set(
+        game.flags.filter((flag) => flag.color === 'BLACK').length,
+      );
     });
 
     effect(() => {
@@ -98,6 +108,19 @@ export class GameDetailsComponent extends DefaultComponent {
         return this.httpService.sweetFetch<Game, void>(
           api(`games/${this.game()?.id}/tokens/add`),
           'POST',
+        );
+      },
+      injector: this.injector,
+    });
+  }
+
+  addFlag(flagColor: FlagColor) {
+    resource({
+      loader: async () => {
+        return this.httpService.sweetFetch<Game, FlagColor>(
+          api(`games/${this.game()?.id}/flags`),
+          'POST',
+          flagColor,
         );
       },
       injector: this.injector,

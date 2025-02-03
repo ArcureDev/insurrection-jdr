@@ -2,6 +2,16 @@
   <div class="flex flex-col gap-3 p-2">
     <div class="flex gap-1 items-center self-center">
       <div class="custom-shadow border border-gray-100 rounded-lg p-4 flex flex-col gap-2 w-60 items-center">
+        <div class="flex gap-1">
+        <ins-flag [flagColor]="'RED'"/>
+          x{{nbRedFlags()}}
+        </div>
+        <ins-button class="flex gap-2" [type]="'button'" [title]="'Donner un jeton'" [isGhost]="true"
+                    (clicking)="addFlag('RED')">
+          Lancer
+        </ins-button>
+      </div>
+      <div class="custom-shadow border border-gray-100 rounded-lg p-4 flex flex-col gap-2 w-60 items-center">
         <div class="flex gap-2">
           {{game()?.nbAvailableShardTokens}}
           <ins-token [size]="22" [type]="'SHARD'"/>
@@ -20,6 +30,16 @@
           }
         </div>
       </div>
+      <div class="custom-shadow border border-gray-100 rounded-lg p-4 flex flex-col gap-2 w-60 items-center">
+        <div class="flex gap-1">
+          <ins-flag [flagColor]="'BLACK'"/>
+          x{{nbBlackFlags()}}
+        </div>
+        <ins-button class="flex gap-2" [type]="'button'" [title]="'Donner un jeton'" [isGhost]="true"
+                    (clicking)="addFlag('BLACK')">
+          Lancer
+        </ins-button>
+      </div>
     </div>
     <div class="flex flex-wrap self-center gap-3">
       @for (player of game()?.players | withoutMyPlayer: myPlayer() ; track player.id) {
@@ -28,11 +48,11 @@
           <ins-shard-tokens [player]="player"/>
           <ins-influence-tokens [player]="player"/>
           @if (canGiveInfluenceToken(player.id)) {
-            <ins-button
-              [type]="'button'"
-              [title]="'Donner un jeton'"
-              [isGhost]="true"
-              (clicking)="giveToken(player)">
+            <ins-button class="mt-auto"
+                        [type]="'button'"
+                        [title]="'Donner un jeton'"
+                        [isGhost]="true"
+                        (clicking)="giveToken(player)">
               Donner un jeton
             </ins-button>
           }
@@ -44,8 +64,8 @@
   </div>
 </div>
 <div class="absolute bottom-0 left-0 right-0 p-2 h-16 shadow-inner flex justify-between items-center">
-  <div class="flex gap-4">
-    <span class="text-lg" [style.color]="myPlayer()?.color">{{myPlayer()?.name}}</span>
+  <div class="flex gap-4 max-w-[50%]">
+    <span class="text-lg truncate" [style.color]="myPlayer()?.color"> {{myPlayer()?.name}}</span>
   </div>
   <div class="flex gap-2">
     <ins-shard-tokens [player]="myPlayer()"/>

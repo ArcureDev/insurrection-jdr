@@ -6,6 +6,8 @@ import jakarta.validation.Valid
 import jakarta.validation.constraints.Max
 import org.arcure.back.config.SSEComponent
 import org.arcure.back.config.annotation.IsMyGame
+import org.arcure.back.flag.FlagMapper
+import org.arcure.back.flag.FlagResponse
 import org.arcure.back.player.PlayerEntity
 import org.arcure.back.player.PlayerMapper
 import org.arcure.back.player.PlayerPayload
@@ -74,21 +76,23 @@ class GameResponse(
     val nbAvailableShardTokens: Int,
     val players: List <PlayerResponse> = mutableListOf(),
     val state: GameState,
-    val url: String
+    val url: String,
+    val flags: List<FlagResponse> = mutableListOf()
 )
 
 @Component
-class GameMapper(private val playerMapper: PlayerMapper) {
+class GameMapper(private val playerMapper: PlayerMapper, private val flagMapper: FlagMapper) {
 
     fun toResponse(game: GameEntity, myPlayer: PlayerEntity): GameResponse {
-        val players = game.players.map { playerMapper.toResponse(it, it.id == myPlayer.id) }
+        val players = game.players.map { playerMapper.toResponse(it, it.id == myPlayer.id) }.toMutableList()
 
         return GameResponse(
             game.id!!,
             game.nbAvailableShardTokens,
             players,
             game.state,
-            game.url
+            game.url,
+            game.players.flatMap { it.flags }.map { flagMapper.toResponse(it) }
         )
     }
 }
@@ -119,34 +123,18 @@ class GameService(
     }
 
     fun getCurrentGame(): GameResponse {
-        val gameEntity = gameRepository.findCurrent(CustomUser.get().userId);
-        val myPlayer = gameEntity?.players?.find { it.user?.id == CustomUser.get().userId }
-
-        check(gameEntity != null) {
-            "No current game"
-        }
-        check(myPlayer != null) {
-            "No current player"
-        }
-        return gameMapper.toResponse(gameEntity, myPlayer)
+        val gameAndMyPlayer = getGameAndMyPlayer()
+        return gameMapper.toResponse(gameAndMyPlayer.game, gameAndMyPlayer.player)
     }
 
     fun getCurrentGameAndNotifyOthers(): GameResponse {
-        val gameEntity = gameRepository.findCurrent(CustomUser.get().userId);
-        val myPlayer = gameEntity?.players?.find { it.user?.id == CustomUser.get().userId }
-
-        check(gameEntity != null) {
-            "No current game"
-        }
-        check(myPlayer != null) {
-            "No current player"
-        }
-        sseComponent.notifySSE(gameEntity.players, gameEntity)
-        return gameMapper.toResponse(gameEntity, myPlayer)
+        val gameAndMyPlayer = getGameAndMyPlayer()
+        sseComponent.notifySSE(gameAndMyPlayer.game)
+        return gameMapper.toResponse(gameAndMyPlayer.game, gameAndMyPlayer.player)
     }
 
     @Transactional
-    fun join(url: String, playerPayload: PlayerPayload): GameResponse {
+    fun join(url: String, playerPayload: PlayerPayload) {
         val gameEntity = gameRepository.findByUrl(url)
         check (gameEntity != null) {
             "Game not exists"
@@ -155,10 +143,6 @@ class GameService(
         val myPlayer = getMyPlayer(gameEntity, playerPayload)
         gameEntity.players.add(myPlayer)
         gameRepository.save(gameEntity)
-
-        sseComponent.notifySSE(gameEntity.players, gameEntity)
-
-        return gameMapper.toResponse(gameEntity, myPlayer)
     }
 
     @Transactional
@@ -167,7 +151,7 @@ class GameService(
         gameEntity.state = GameState.DONE
         gameRepository.save(gameEntity)
 
-        sseComponent.notifySSE(gameEntity.players, null)
+        sseComponent.notifySSE(gameEntity.players)
     }
 
     fun getMyPlayer(gameEntity: GameEntity, playerPayload: PlayerPayload): PlayerEntity {
@@ -190,6 +174,22 @@ class GameService(
 
         return playerEntity
     }
+
+    private fun getGameAndMyPlayer(): GameAndMyPlayer {
+        val gameEntity = gameRepository.findCurrent(CustomUser.get().userId);
+        val myPlayer = gameEntity?.players?.find { it.user?.id == CustomUser.get().userId }
+
+        check(gameEntity != null) {
+            "No current game"
+        }
+        check(myPlayer != null) {
+            "No current player"
+        }
+
+        return GameAndMyPlayer(gameEntity, myPlayer)
+    }
+
+    class GameAndMyPlayer(val game: GameEntity, val player: PlayerEntity)
 
 }
 
@@ -216,7 +216,8 @@ class GameController(
 
     @PutMapping
     fun join(@RequestParam url: String, @RequestBody @Valid player: PlayerPayload): GameResponse {
-        return this.gameService.join(url, player)
+        this.gameService.join(url, player)
+        return this.gameService.getCurrentGameAndNotifyOthers()
     }
 
     @IsMyGame
