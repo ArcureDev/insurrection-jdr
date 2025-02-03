@@ -8,6 +8,10 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
+defaults: 
+  run:
+    working-directory: ./front
+
 jobs:
   build-front: 
     name: Build front
@@ -19,7 +23,6 @@ jobs:
         node-version: 18
     - uses: actions/checkout@v4
     - name: toto
-      working-directory: ./front
       run: |
         npm install
         npm run build
@@ -30,7 +33,6 @@ jobs:
     needs: build-front
     steps:
       - name: Build front image
-        working-directory: ./front
         run: docker build -f Dockerfile -t arcuredev/insurrection-front:latest -t arcuredev/insurrection-front:${{github.sha}} .
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
@@ -39,7 +41,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push frontoffice image
-        working-directory: ./front
         run: docker push arcuredev/insurrection-front:${{github.sha}}
 
 
