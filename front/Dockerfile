@@ -3,6 +3,7 @@ FROM node:lts-alpine AS build-stage
 # Install build tools (e.g., Maven, Gradle)
 # Copy source code
 # Build commands (e.g., compile, package)
+WORKDIR /front
 COPY package*.json ./
 RUN npm install
 COPY . .
