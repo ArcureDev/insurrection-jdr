@@ -18,6 +18,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Log in to the Container registry
+      uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/setup-node@v4
       with:
         node-version: 18
@@ -27,6 +33,7 @@ jobs:
         npm install
         npm run build
         docker build -f Dockerfile -t arcuredev/insurrection-front:latest -t arcuredev/insurrection-front:${{github.sha}} .
+        docker push arcuredev/insurrection-front:${{github.sha}}
 
 
 
