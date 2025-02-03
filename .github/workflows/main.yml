@@ -16,6 +16,9 @@ jobs:
   build-front: 
     name: Build front
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
 
     steps:
     - name: Log in to the Container registry
