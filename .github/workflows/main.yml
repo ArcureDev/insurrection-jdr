@@ -17,12 +17,12 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: 18
+    - uses: actions/checkout@v4
     - name: toto
       working-directory: ./front
-      run: npm install
-    - name: titi
-      working-directory: ./front
-      run: npm run build
+      run: |
+        npm install
+        npm run build
 
   build-docker-image-fo:
     name: Build image FO
