@@ -24,19 +24,21 @@ jobs:
         npm install
         npm run build
 
-  build-docker-image-fo:
-    name: Build image FO
+  build-docker-image-front:
+    name: Build image front
     runs-on: ubuntu-latest
     needs: build-front
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Build front image
+        run: docker build -f Dockerfile -t arcuredev/insurrection-front:latest -t arcuredev/insurrection-front:${{DOCKER_TAG}} .
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push frontoffice image
+        run: docker push arcuredev/insurrection-front:${{DOCKER_TAG}}
 
 
 
