@@ -31,6 +31,7 @@ jobs:
         npm run build
 
   build:
+    needs: build-front
     runs-on: ubuntu-latest
     permissions:
       contents: read
