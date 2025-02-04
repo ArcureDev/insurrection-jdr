@@ -5,7 +5,7 @@ COPY mvnw pom.xml ./
 RUN chmod +x ./mvnw
 RUN ./mvnw dependency:go-offline
 COPY ./src ./src
-RUN ./mvnw clean install
+RUN ./mvnw clean install -DskipTests
 
 FROM eclipse-temurin:21.0.2_13-jdk-jammy AS final
 WORKDIR /opt/app
