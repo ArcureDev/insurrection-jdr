@@ -1,0 +1,88 @@
+networks:
+  mid-insurrection:
+    internal: true
+  back-insurrection:
+    internal: true
+
+services:
+  # --- insurrection ---
+  insurrection-db-postgres:
+    image: postgis/postgis:16-3.5-alpine
+    container_name: insurrection-db-postgres
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: on-failure:3
+    networks:
+      - back-insurrection
+    volumes:
+      - insurrection-data-postgres:/var/lib/postgresql/data
+    env_file:
+      - .insurrection-env
+    environment:
+      POSTGRES_DB: ${POSTGRESQL_ADDON_DB}
+      POSTGRES_PASSWORD: ${POSTGRESQL_ADDON_PASSWORD}
+      POSTGRES_USER: ${POSTGRESQL_ADDON_USER}
+
+  insurrection-backend:
+    image: arcuredev/insurrection:main
+    container_name: insurrection-backend
+    depends_on:
+      insurrection-db-postgres:
+        condition: service_healthy
+    healthcheck:
+      # ça retourne 1 => donc le insurrection sera faux (dans le cas où toutes les tentatives ont fail)
+      test: curl --fail http://localhost:8080/ || exit 1
+      interval: 20s
+      # temps d'attente de la commande en elle-même
+      timeout: 20s
+      retries: 3
+      start_period: 40s
+    restart: on-failure:3
+    networks:
+      - mid-insurrection
+      - back-insurrection
+    env_file:
+      - .insurrection-env
+
+  insurrection-frontoffice:
+    image: arcuredev/uniting-frontoffice:0.2
+    container_name: insurrection-frontoffice
+    depends_on:
+      insurrection-backend:
+        condition: service_healthy
+    restart: on-failure:3
+    networks:
+      - mid-insurrection
+      - back-insurrection
+
+  # --- NGINX ---
+  uniting-nginx:
+    image: nginx:stable-alpine
+    container_name: uniting-nginx
+    depends_on:
+      - insurrection-backend
+      - insurrection-frontoffice
+    restart: on-failure:3
+    networks:
+      - mid
+      - mid-insurrection
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/conf.d/:/etc/nginx/conf.d/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
+      - ./certbot/www/:/var/www/certbot/:ro
+
+  certbot:
+    image: certbot/certbot:lainsurrection
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
+
+volumes:
+  data-postgres: {}
+  insurrection-data-postgres: {}
