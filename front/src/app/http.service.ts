@@ -1,4 +1,11 @@
-import { effect, Injectable, Resource, resource, signal } from '@angular/core';
+import {
+  effect,
+  Injectable,
+  Resource,
+  resource,
+  signal,
+  untracked,
+} from '@angular/core';
 import { toHttpParams } from './utils/object.utils';
 import { Game, User } from './types';
 
@@ -33,12 +40,14 @@ export class HttpService {
 
     effect(() => {
       const isAuthenticated = this.isAuthenticated();
-      if (!isAuthenticated) {
-        this.unsubscribeToGameUpdates();
-        return;
-      }
-      this.currentGameResource.reload();
-      this.subscribeToGameUpdates();
+      untracked(() => {
+        if (!isAuthenticated) {
+          this.unsubscribeToGameUpdates();
+          return;
+        }
+        this.currentGameResource.reload();
+        this.subscribeToGameUpdates();
+      });
     });
   }
 

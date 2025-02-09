@@ -26,7 +26,7 @@ class SSEComponent(private val gameMapper: GameMapper) {
 
     fun addSse(): SseEmitter? {
         val userId = CustomUser.get().userId
-        return sses.computeIfAbsent(userId) { _: Long? -> SseEmitter(Long.MAX_VALUE) }
+        return sses.getOrPut(userId) { SseEmitter() }
     }
 
     fun removeSSE(userId: Long) {
